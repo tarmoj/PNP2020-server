@@ -13,7 +13,7 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 	m_pWebSocketServer(new QWebSocketServer(QStringLiteral("PNPServer"),
                                             QWebSocketServer::NonSecureMode, this)),
 	m_clients(), slowClients(), fastClients(),
-	slowInterval(20 *1000), fastInterval(slowInterval*4)
+	slowInterval(20 *1000), fastInterval(slowInterval/4)
 
 {
     if (m_pWebSocketServer->listen(QHostAddress::Any, port)) {
@@ -53,10 +53,18 @@ void WsServer::onNewConnection()
     connect(pSocket, &QWebSocket::disconnected, this, &WsServer::socketDisconnected);
 
     m_clients << pSocket;
+	slowClients << pSocket;
     emit newConnection(m_clients.count());
 }
 
 
+// TODO: kuidas kontrollida, kas mõni küsimus jäi vastamata? veebilehes -  kui järgmine tuleb sisse ja vastamata, siis saada EI
+// kas kliendis count-down järgmise korralduseni
+// serveri UI-s arv -  kui palju fast / kui palju slow? JAH / EI
+// iga mängija kohta mingii element, mis vastavalt JAH/EI -  punane/roheline
+// kogu statisikat iga kasutaja kohta, kas punane roheline
+// üks suur pall terviku kohta (hall, kui 0), kas eraldi QML aken? kasutajaliides->QML
+// kuidas teha, et klientidel nupud desaktiveeritud? Kui käsk tuleb sisse, siis enable, kui
 
 void WsServer::processTextMessage(QString message)
 {
@@ -68,6 +76,14 @@ void WsServer::processTextMessage(QString message)
 	QString peerAdress = pClient->peerAddress().toString();
 
 	emit newMessage(message);
+
+	if (message.startsWith("report")) { // comes in "report result" where result 0|1
+		QStringList messageParts = message.split(" ");
+		if (messageParts.size()>=2) {
+			bool result = static_cast<bool>(messageParts[1].toInt());
+			handleReport(pClient, result);
+		}
+	}
 
 
 
@@ -93,12 +109,15 @@ void WsServer::socketDisconnected()
 
 void WsServer::slowTimeout()
 {
+	qDebug() << "Slow trigger";
 	sendCommands(SLOW);
 }
 
 void WsServer::fastTimeout()
 {
 	sendCommands(FAST);
+	qDebug() << "Fast trigger";
+
 }
 
 
@@ -106,14 +125,16 @@ void WsServer::fastTimeout()
 void WsServer::sendCommands(int slowOrFast)
 {
 	QList<QWebSocket *> clients = (slowOrFast==FAST) ? fastClients : slowClients;
-	// test:
-	getCommand("*");
+	if (slowOrFast == ALL) {
+		clients = m_clients;
+	}
+	qDebug() << "Clients in " << slowOrFast << " " << clients.count();
 	foreach (QWebSocket * socket, clients ) {
 		if (socket) {
 			QString category = "*";//currentCategories[0];
 			QString command = getCommand(category);
 			qDebug() << "Saadan kliendile " << socket->peerAddress().toString() << " kategoorias:  " << category << " korralduse: "  << command;
-			//socket->sendTextMessage("category:  "+category+" command: "+command);
+			socket->sendTextMessage("command|"+category+"|"+command); // sends as "command"|category|command
 		}
 	}
 
@@ -127,6 +148,30 @@ QString WsServer::getCommand(QString category)
 	QString command = commands.at(index);
 	qDebug() << "Käsk: " << command;
 	return command;
+}
+
+void WsServer::handleReport(QWebSocket *client, bool result)
+{
+	if (!client) {
+		qDebug() << Q_FUNC_INFO << "Client is null!";
+		return;
+	}
+	qDebug() << client->peerAddress().toString() << " raport: " << result;
+	if (result) {
+		if (fastClients.contains(client)) {  // if was in fast and done, move to slow
+			if (!slowClients.contains(client)) {
+				slowClients.append(client);
+			}
+			fastClients.removeAll(client);
+		}
+	} else {
+		if (slowClients.contains(client)) { // if was in slow and undone, move to fast
+			if (!fastClients.contains(client)) {
+				fastClients.append(client);
+			}
+			slowClients.removeAll(client);
+		}
+	}
 }
 
 void WsServer::makeCommandList()

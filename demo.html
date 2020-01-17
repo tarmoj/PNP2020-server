@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+        <meta name="viewport" content="width=device-width" />
+
+    <title>Suur Vaikus. Ludus finalis</title>
+    <meta content="Tarmo Johannes" id="author">
+	
+<!--	<link type="text/css" rel="stylesheet" href="audience.css">-->
+	<style >
+	</style>
+    <script src="ws-functions.js"></script> <!-- websocket functions -->
+    <script src="server_address.js"></script>  <!-- default address of the ws server -->
+    <script>
+    
+
+    function onMessage(evt) 
+    {
+            writeToScreen("Message from server: " + evt.data + '\n');
+            var mess_array = evt.data.split("|");
+            if (mess_array.length>=3 && mess_array[0]==="command") {
+				var category = mess_array[1];
+				var command = mess_array[2];
+				document.getElementById("command").innerHTML = command;
+				document.getElementById("yesButton").disabled = false;
+				document.getElementById("noButton").disabled = false;
+			}
+            
+            
+            //console.log(mess_array[0]);
+           
+    }
+    
+    function disableButtons() 
+    {
+		document.getElementById("yesButton").disabled = true;
+		document.getElementById("noButton").disabled = true;
+    }
+    
+
+	
+	window.onload = function() {
+		document.getElementById("url").value = serverUrl; //serverUrl;
+		doConnect(serverUrl);	
+		disableButtons();
+	}
+	
+    </script>
+
+  </head>
+  <body style='background="darkgreen"'>
+	<h1>Suur Vaikus. Ludus finalis</h1>
+	
+	Käsk: <label id="command"></label>
+	
+	<br>
+	<br>
+	<button id="yesButton" onclick='doSend("report 1"); disableButtons();'>TEGIN</button>
+	<button id="noButton" onclick='doSend("report 0"); disableButtons();'>TEGIN</button>
+    <br>
+    <br>
+    Server: <input value="ws://192.168.1.199:9009/ws" id="url" type="text" >
+    <button type="button" id="connectButton" onclick="doConnect(url.value);">Connect</button>
+    <br>
+    <br>
+     <p><textarea id="outputtext" rows="5" cols="30" readonly ></textarea> </p>
+     
+	
+  </body>
+</html>

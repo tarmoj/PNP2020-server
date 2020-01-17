@@ -19,6 +19,7 @@ struct VoteResults {
 
 #define SLOW 0
 #define FAST 1
+#define ALL 2
 
 class WsServer : public QObject
 {
