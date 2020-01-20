@@ -1,1 +1,1 @@
-var serverUrl = "ws://192.168.1.164:9009/ws" 
+var serverUrl = "ws://127.0.0.1:9009/ws" 

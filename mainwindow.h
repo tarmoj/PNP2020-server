@@ -26,6 +26,10 @@ private slots:
 
 	void on_timersCheckBox_toggled(bool checked);
 
+	void on_startSectioButton_clicked();
+
+	void on_stopSectionButton_clicked();
+
 private:
 	Ui::MainWindow *ui;
 	WsServer *wsServer;

@@ -13,14 +13,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(wsServer, SIGNAL(newConnection(int)), this, SLOT(setClientsCount(int)));
 	connect(wsServer, &WsServer::newSlowRemaining, this->ui->slowRemainingLabel, &QLabel::setText);
 	connect(wsServer, &WsServer::newFastRemaining, this->ui->fastRemainingLabel, &QLabel::setText);
+	connect(wsServer, &WsServer::newSection, this->ui->sectionSpinBox, &QSpinBox::setValue);
 
-	//connect(wsServer, SIGNAL(newMessage(QString)), ui->messagesTextEdit, SLOT(append(QString)) );
-	//connect(wsServer, SIGNAL(newParameters(QString)), ui->parametersTextEdit, SLOT(setText(QString)) );
-
-
-	//connect(wsServer, SIGNAL(pausedChanged(bool)), ui->checkBox, SLOT(setChecked(bool))  );
-
-	//on_setOscButton_clicked();
+	wsServer->setOscAddress(ui->oscServerLineEdit->text(), static_cast<quint16>(ui->portSpinBox->value()));
 
 
 	}
@@ -44,4 +39,14 @@ void MainWindow::on_setOscButton_clicked()
 void MainWindow::on_timersCheckBox_toggled(bool checked)
 {
 	wsServer->toggleTimers(checked);
+}
+
+void MainWindow::on_startSectioButton_clicked()
+{
+	wsServer->setSection(ui->sectionSpinBox->value()-1);
+}
+
+void MainWindow::on_stopSectionButton_clicked()
+{
+	wsServer->toggleTimers(false);
 }
