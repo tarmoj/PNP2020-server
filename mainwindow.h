@@ -22,6 +22,10 @@ public slots:
 private slots:
 
 
+	void on_setOscButton_clicked();
+
+	void on_timersCheckBox_toggled(bool checked);
+
 private:
 	Ui::MainWindow *ui;
 	WsServer *wsServer;

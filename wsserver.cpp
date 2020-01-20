@@ -13,7 +13,8 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 	m_pWebSocketServer(new QWebSocketServer(QStringLiteral("PNPServer"),
                                             QWebSocketServer::NonSecureMode, this)),
 	m_clients(), slowClients(), fastClients(),
-	slowInterval(20 *1000), fastInterval(slowInterval/4)
+	slowInterval(20 *1000), fastInterval(slowInterval/3),
+	m_oscAddress(nullptr)
 
 {
     if (m_pWebSocketServer->listen(QHostAddress::Any, port)) {
@@ -23,13 +24,9 @@ WsServer::WsServer(quint16 port, QObject *parent) :
         connect(m_pWebSocketServer, &QWebSocketServer::closed, this, &WsServer::closed);
 		connect(&slowTimer, &QTimer::timeout, this, &WsServer::slowTimeout );
 		connect(&fastTimer, &QTimer::timeout, this, &WsServer::fastTimeout );
-
+		connect(&counterTimer, &QTimer::timeout, this, &WsServer::counterTimeout );
 		makeCommandList();
 
-		slowTimer.start(slowInterval);
-		fastTimer.start(fastInterval);
-
-		// maybe later start from some function
 	}
 
 
@@ -110,34 +107,93 @@ void WsServer::socketDisconnected()
 void WsServer::slowTimeout()
 {
 	qDebug() << "Slow trigger";
-	sendCommands(SLOW);
+	if (slowClients.count()>0) sendCommands(SLOW);
 }
 
 void WsServer::fastTimeout()
 {
-	sendCommands(FAST);
+	if (fastClients.count()>0)  sendCommands(FAST);
 	qDebug() << "Fast trigger";
 
 }
 
-
-
-void WsServer::sendCommands(int slowOrFast)
+void WsServer::counterTimeout()
 {
-	QList<QWebSocket *> clients = (slowOrFast==FAST) ? fastClients : slowClients;
-	if (slowOrFast == ALL) {
-		clients = m_clients;
+	int slowRemaining = slowTimer.remainingTime()/1000;
+	int fastRemaining = fastTimer.remainingTime()/1000;
+	qDebug() << "Timers: " << slowRemaining << " " << fastRemaining;
+	emit newSlowRemaining(QString::number(slowRemaining));
+	emit newFastRemaining(QString::number(fastRemaining));
+	// send to clients as well
+	sendToClients(SLOW, "countdown|"+QString::number(slowRemaining));
+	sendToClients(FAST, "countdown|"+QString::number(fastRemaining));
+}
+
+void WsServer::setOscAddress(QString host, quint16 port)
+{
+	qDebug()<<"Setting OSC address to: "<<host<<port;
+	if (m_oscAddress == nullptr) {
+		m_oscAddress = new QOscClient(QHostAddress(host), port, this);
+	} else {
+		m_oscAddress->setAddress(QHostAddress(host), port);
 	}
-	qDebug() << "Clients in " << slowOrFast << " " << clients.count();
+}
+
+void WsServer::sendCommandAsOSC(QString category, QString command)
+{
+	if (m_oscAddress) {
+		m_oscAddress->sendData("/viga",  QList<QVariant>() << category << command);
+	}
+}
+
+void WsServer::toggleTimers(bool checked)
+{
+	if (checked) {
+		slowTimer.start(slowInterval);
+		fastInterval = slowInterval/3;
+		fastTimer.start(fastInterval);
+		counterTimer.start(1000);
+		slowTimeout(); fastTimeout(); counterTimeout(); // first firing is not at start otherwise
+	} else {
+		slowTimer.stop();
+		fastTimer.stop();
+		counterTimer.stop();
+	}
+}
+
+void WsServer::sendToClients(int clientsType, QString message)
+{
+	QList<QWebSocket *> clients;
+
+	switch (clientsType) {
+		case SLOW: clients = slowClients; break;
+		case FAST: clients = fastClients; break;
+		case ALL: clients= m_clients; break;
+		default: return;
+
+	}
+
 	foreach (QWebSocket * socket, clients ) {
 		if (socket) {
-			QString category = "*";//currentCategories[0];
-			QString command = getCommand(category);
-			qDebug() << "Saadan kliendile " << socket->peerAddress().toString() << " kategoorias:  " << category << " korralduse: "  << command;
-			socket->sendTextMessage("command|"+category+"|"+command); // sends as "command"|category|command
+			socket->sendTextMessage(message);
 		}
 	}
+}
 
+
+
+
+void WsServer::sendCommands(int clientsType)
+{
+
+	QString category = "*";//currentCategories[0];
+	QString command = getCommand(category);
+
+	QString message = "command|"+category+"|"+command;
+	sendToClients(clientsType, message);
+
+	// send OSC <- needs more
+	//sendCommandAsOSC(category, getCommand(category));
 }
 
 QString WsServer::getCommand(QString category)

@@ -6,6 +6,8 @@
 #include <QMultiHash>
 #include <QTimer>
 
+#include "qosc/qoscclient.h"
+
 
 
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
@@ -28,16 +30,21 @@ public:
 	explicit WsServer(quint16 port, QObject *parent = nullptr);
     ~WsServer();
 
-	void sendCommands(int slowOrFast);
+	void sendCommands(int clientsType);
 	QString getCommand(QString category);
 	void handleReport(QWebSocket *client, bool result);
 	void makeCommandList();
+	void setOscAddress(QString host, quint16 port);
+	void sendCommandAsOSC(QString category, QString command);
+	void toggleTimers(bool checked);
+	void sendToClients(int clientsType, QString message);
 
 Q_SIGNALS:
     void closed();
     void newConnection(int connectionsCount);
 	void newMessage(QString message);
-
+	void newSlowRemaining(QString seconds);
+	void newFastRemaining(QString seconds);
 
 
 private Q_SLOTS:
@@ -46,6 +53,7 @@ private Q_SLOTS:
     void socketDisconnected();
 	void slowTimeout();
 	void fastTimeout();
+	void counterTimeout();
 
 
 private:
@@ -54,8 +62,9 @@ private:
 	QList<QWebSocket *> slowClients, fastClients;
 	QStringList categories, currentCategories;
 	QMultiHash <QString, QString> allCommands; // key: category, value: command
-	QTimer slowTimer, fastTimer;
+	QTimer slowTimer, fastTimer, counterTimer;
 	int slowInterval, fastInterval;
+	QOscClient * m_oscAddress;
 
 
 };

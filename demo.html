@@ -14,17 +14,29 @@
     <script src="server_address.js"></script>  <!-- default address of the ws server -->
     <script>
     
-
+	var countingTimer;
+	var accomplished = true;
+	
     function onMessage(evt) 
     {
             writeToScreen("Message from server: " + evt.data + '\n');
             var mess_array = evt.data.split("|");
             if (mess_array.length>=3 && mess_array[0]==="command") {
+				if (!document.getElementById("yesButton").disabled) { // if new command comes and has not answered yet, set it disabled
+					doSend("report 0"); 
+					accomplished = 0;
+				}
 				var category = mess_array[1];
 				var command = mess_array[2];
+				var interval =   parseInt(mess_array[3]);
 				document.getElementById("command").innerHTML = command;
 				document.getElementById("yesButton").disabled = false;
 				document.getElementById("noButton").disabled = false;
+				window.document.body.style.backgroundColor = getRandomRolor((accomplished) ? "blue" : "red" );
+
+			}
+			if (mess_array.length>=2 && mess_array[0]==="countdown") {
+				document.getElementById("countdown").innerHTML = mess_array[1];
 			}
             
             
@@ -32,10 +44,37 @@
            
     }
     
+    function getRandomRolor(redOrBlue) {
+        var letters = "0123456789".split("");
+        var color="#";
+        if (redOrBlue==="red") {
+			color += "ff";
+			for (var i = 0; i < 4; i++) {
+				color += letters[Math.round(Math.random() * 9)];
+			}
+        } else if (redOrBlue==="blue") {
+			for (var i = 0; i < 4; i++) {
+				color += letters[Math.round(Math.random() * 9)];
+			}
+			color += "ff";
+        }
+        return color;
+	}
+    
+    
     function disableButtons() 
     {
 		document.getElementById("yesButton").disabled = true;
 		document.getElementById("noButton").disabled = true;
+    }
+    
+    
+    function report(result) { // result is 1 or 0
+		doSend("report " + result); 
+		disableButtons(); 
+		accomplished = result;
+		window.document.body.style.backgroundColor = getRandomRolor((result) ? "blue" : "red" );
+    
     }
     
 
@@ -49,15 +88,19 @@
     </script>
 
   </head>
-  <body style='background="darkgreen"'>
+  <body style='background-color:darkblue; color: white'>
 	<h1>Suur Vaikus. Ludus finalis</h1>
 	
+	<div>
+	Järgmise käsuni: <label id="countdown">-1</label>
+	</div>
+	<br>
 	Käsk: <label id="command"></label>
 	
 	<br>
 	<br>
-	<button id="yesButton" onclick='doSend("report 1"); disableButtons();'>TEGIN</button>
-	<button id="noButton" onclick='doSend("report 0"); disableButtons();'>TEGIN</button>
+	<button id="yesButton" onclick='report(1)'>TEGIN</button>
+	<button id="noButton" onclick='report(0)'>EI TEINUD</button>
     <br>
     <br>
     Server: <input value="ws://192.168.1.199:9009/ws" id="url" type="text" >
