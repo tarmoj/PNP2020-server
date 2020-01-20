@@ -56,6 +56,7 @@ void WsServer::onNewConnection()
 
     m_clients << pSocket;
 	slowClients << pSocket;
+	pSocket->sendTextMessage("section|"+QString::number(currentSection+1));
     emit newConnection(m_clients.count());
 	if (m_oscAddress) {
 		m_oscAddress->sendData("/error/clients",  QList<QVariant>() << m_clients.count());
@@ -80,7 +81,7 @@ void WsServer::processTextMessage(QString message)
 	qDebug()<<message;
 	QString peerAdress = pClient->peerAddress().toString();
 
-	emit newMessage(message);
+	//emit newMessage(message);
 
 	if (message.startsWith("report")) { // comes in "report result" where result 0|1
 		QStringList messageParts = message.split(" ");
@@ -131,7 +132,7 @@ void WsServer::counterTimeout()
 {
 	int slowRemaining = slowTimer.remainingTime()/1000;
 	int fastRemaining = fastTimer.remainingTime()/1000;
-	qDebug() << "Timers: " << slowRemaining << " " << fastRemaining;
+	//qDebug() << "Timers: " << slowRemaining << " " << fastRemaining;
 	emit newSlowRemaining(QString::number(slowRemaining));
 	emit newFastRemaining(QString::number(fastRemaining));
 	// send to clients as well
@@ -142,9 +143,19 @@ void WsServer::counterTimeout()
 void WsServer::sectionTimeout()
 {
 	toggleTimers(false);
+
+	if (currentSection==6) {
+		sendToClients(ALL, "section|LÕPP");
+		if (m_oscAddress) {
+			m_oscAddress->sendData("/error/end",  QList<QVariant>() << "END!");
+		}
+
+	}
+
 	if (currentSection<6) {
 		setSection(currentSection+1);
 	}
+
 }
 
 
@@ -205,97 +216,65 @@ void WsServer::setSection(int section)
 		return;
 	}
 
+	const int minutes = 1;
+
 	qDebug() << "Section (index)" << section;
+	currentSection = section;
+	currentCategories.clear();
+	if (categories.count()>section) {
+		currentCategories << categories[section];
+	}
+
 
 	if (section==0) {
-		currentSection = 0;
 		slowInterval = 60 * 1000; // in milliseconds
 		fastSlowRatio = 3;
-		fastInterval = slowInterval/fastSlowRatio;
-		sectionDuration = 2*60; // in sections ? singleshot timer to stop timers?
-
-		currentCategories.clear();
-		if (categories.count()>0)
-			currentCategories << categories[0]; // TODO: better if just pass index, no need to copy
-		else
-			qDebug() << "No categories?";
-	} else if (section==0) {
-		currentSection = 1;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==1) {
 		slowInterval = 50 * 1000; // in milliseconds
 		fastSlowRatio = 3;
-		fastInterval = slowInterval/fastSlowRatio;
-		sectionDuration = 2*60; // in sections ? singleshot timer to stop timers?
-
-		currentCategories.clear();
-		if (categories.count()>0)
-			currentCategories << categories[1]; // TODO: better if just pass index, no need to copy
-		else
-			qDebug() << "No categories?";
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
 	} else if (section==2) {
-		currentSection = 1;
 		slowInterval = 45 * 1000; // in milliseconds
 		fastSlowRatio = 2;
-		fastInterval = slowInterval/fastSlowRatio;
-		sectionDuration = 2*60; // in sections ? singleshot timer to stop timers?
-
-		currentCategories.clear();
-		if (categories.count()>0)
-			currentCategories << categories[2]; // TODO: better if just pass index, no need to copy
-		else
-			qDebug() << "No categories?";
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
 	} else if (section==3) {
-		currentSection = 1;
 		slowInterval = 40 * 1000; // in milliseconds
 		fastSlowRatio = 2;
-		fastInterval = slowInterval/fastSlowRatio;
-		sectionDuration = 10*60; // in sections ? singleshot timer to stop timers?
-
-		currentCategories.clear();
-		if (categories.count()>0)
-			currentCategories << categories[3]; // TODO: better if just pass index, no need to copy
-		else
-			qDebug() << "No categories?";
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
 	} else if (section==4) {
-		currentSection = 1;
 		slowInterval = 30 * 1000; // in milliseconds
 		fastSlowRatio = 2;
-		fastInterval = slowInterval/fastSlowRatio;
-		sectionDuration = 10*60; // in sections ? singleshot timer to stop timers?
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = minutes*60;
 
 		currentCategories.clear();
-		if (categories.count()>0)
-			currentCategories << "*";//categories[]; // TODO: better if just pass index, no need to copy
-		else
-			qDebug() << "No categories?";
+		currentCategories << "*"; // NB ! ALL categories here!
 	} else if (section==5) {
-		currentSection = 1;
 		slowInterval = 60 * 1000; // in milliseconds
 		fastSlowRatio = 3;
-		fastInterval = slowInterval/fastSlowRatio;
-		sectionDuration = 10*60; // in sections ? singleshot timer to stop timers?
-
-		currentCategories.clear();
-		if (categories.count()>0)
-			currentCategories << categories[2]; // TODO: better if just pass index, no need to copy
-		else
-			qDebug() << "No categories?";
-	toggleTimers(true);
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
 	} else if (section==6) {
-		currentSection = 1;
 		slowInterval = 20 * 1000; // in milliseconds
 		fastSlowRatio = 2;
-		fastInterval = slowInterval/fastSlowRatio;
-		sectionDuration = 10*60; // in sections ? singleshot timer to stop timers?
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
 
 		currentCategories.clear();
-		if (categories.count()>0)
-			currentCategories << "*";//categories[2]; // TODO: better if just pass index, no need to copy
-		else
-			qDebug() << "No categories?";
+		currentCategories << "*";//categories[2]; // TODO: better if just pass index, no need to copy
 	}
-	sendToClients(ALL, "section|"+QString::number(section));
 
-	emit newSection(currentSection+1);
+	sendToClients(ALL, "section|"+QString::number(section+1));
+
+	emit newSection(section+1);
+	emit newMessage("Section "+QString::number(section+1));
+	qDebug()<< "Category: " << currentCategories;
+
 	if (m_oscAddress) {
 		m_oscAddress->sendData("/error/section",  QList<QVariant>() << currentSection + 1);
 	}
@@ -311,16 +290,17 @@ void WsServer::sendCommands(int clientsType)
 {
 
 	QString category = "*";//currentCategories.count()<1 ? "*" : currentCategories[0];
-	QString command = getCommand(category);
 
-	QString message = "command|"+category+"|"+command;
+
+	// send OSC <- needs more
+	sendCommandAsOSC(category, getCommand(category));
+
 	QList<QWebSocket *> clients;
 	switch (clientsType) {
 		case SLOW: clients = slowClients; break;
 		case FAST: clients = fastClients; break;
 		case ALL: clients= m_clients; break;
 		default: return;
-
 	}
 
 	foreach (QWebSocket * socket, clients ) {
@@ -329,8 +309,6 @@ void WsServer::sendCommands(int clientsType)
 		}
 	}
 
-	// send OSC <- needs more
-	sendCommandAsOSC(category, getCommand(category));
 }
 
 QString WsServer::getCommand(QString category)
@@ -338,7 +316,7 @@ QString WsServer::getCommand(QString category)
 	QStringList commands =(category=="*") ? allCommands.values() : allCommands.values(category);
 	int index = qrand() % commands.count(); // %
 	QString command = commands.at(index);
-	qDebug() << "Käsk: " << command;
+	//qDebug() << "Käsk: " << command;
 	return command;
 }
 
@@ -374,6 +352,7 @@ void WsServer::handleReport(QWebSocket *client, bool result)
 void WsServer::makeCommandList()
 {
 	allCommands.clear();
+	categories.clear();
 	QFile file("../PNP2020-server/Commands.csv");
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		return;
@@ -388,7 +367,14 @@ void WsServer::makeCommandList()
 
 	qDebug() << "Added " << allCommands.count() << " commands to list";
 	// TODO: shuffle allCommands by category? or find algorythn to take random index
-	categories = allCommands.keys();
+	QStringList temp = allCommands.keys();
+	temp.removeDuplicates();
+	// shuffle the list to categories
+	while (!temp.isEmpty() ) {
+		int index = qrand() % temp.count();
+		categories  << temp.takeAt(index);
+	}
+	qDebug() << "Categories: " << categories;
 }
 
 

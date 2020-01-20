@@ -14,6 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(wsServer, &WsServer::newSlowRemaining, this->ui->slowRemainingLabel, &QLabel::setText);
 	connect(wsServer, &WsServer::newFastRemaining, this->ui->fastRemainingLabel, &QLabel::setText);
 	connect(wsServer, &WsServer::newSection, this->ui->sectionSpinBox, &QSpinBox::setValue);
+	connect(wsServer, &WsServer::newMessage, this->ui->messagesTextEdit, &QTextEdit::append);
+
 
 	wsServer->setOscAddress(ui->oscServerLineEdit->text(), static_cast<quint16>(ui->portSpinBox->value()));
 

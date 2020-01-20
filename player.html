@@ -38,6 +38,10 @@
 			if (mess_array.length>=2 && mess_array[0]==="countdown") {
 				document.getElementById("countdown").innerHTML = mess_array[1];
 			}
+			
+			if (mess_array.length>=2 && mess_array[0]==="section") {
+				document.getElementById("section").innerHTML = mess_array[1];
+			}
             
             
             //console.log(mess_array[0]);
@@ -95,6 +99,8 @@
 	Järgmise käsuni: <label id="countdown">-1</label>
 	</div>
 	<br>
+	Lõik: <label id="section">-1</label>
+	<br>
 	Käsk: <label id="command"></label>
 	
 	<br>
@@ -107,7 +113,7 @@
     <button type="button" id="connectButton" onclick="doConnect(url.value);">Connect</button>
     <br>
     <br>
-     <p><textarea id="outputtext" rows="5" cols="30" readonly ></textarea> </p>
+     <p><textarea id="outputtext" rows="5" cols="30" readonly hidden></textarea> </p>
      
 	
   </body>
