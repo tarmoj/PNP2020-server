@@ -32,7 +32,7 @@ public:
 
 	void sendCommands(int clientsType);
 	QString getCommand(QString category);
-	void handleReport(QWebSocket *client, bool result);
+	void handleReport(QWebSocket *client, bool result, int efficiency);
 	void makeCommandList();
 	void setOscAddress(QString host, quint16 port);
 	void sendCommandAsOSC(QString category, QString command);

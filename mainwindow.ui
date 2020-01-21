@@ -80,7 +80,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="text">
-     <string>127.0.0.1</string>
+     <string>172.20.10.2</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_3">

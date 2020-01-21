@@ -59,7 +59,7 @@ void WsServer::onNewConnection()
 	pSocket->sendTextMessage("section|"+QString::number(currentSection+1));
     emit newConnection(m_clients.count());
 	if (m_oscAddress) {
-		m_oscAddress->sendData("/error/clients",  QList<QVariant>() << m_clients.count());
+		m_oscAddress->sendData("/kliente",  QList<QVariant>() << m_clients.count());
 	}
 }
 
@@ -87,7 +87,8 @@ void WsServer::processTextMessage(QString message)
 		QStringList messageParts = message.split(" ");
 		if (messageParts.size()>=2) {
 			bool result = static_cast<bool>(messageParts[1].toInt());
-			handleReport(pClient, result);
+			int efficiency = messageParts[2].toInt();
+			handleReport(pClient, result, efficiency );
 		}
 	}
 
@@ -138,6 +139,18 @@ void WsServer::counterTimeout()
 	// send to clients as well
 	sendToClients(SLOW, "countdown|"+QString::number(slowRemaining));
 	sendToClients(FAST, "countdown|"+QString::number(fastRemaining));
+
+
+	if (m_oscAddress) {
+		int phaseSlow = int((1 - (float)slowTimer.remainingTime()/slowTimer.interval())*100);
+		int phaseFast = int((1 - (float)fastTimer.remainingTime()/fastTimer.interval())*100);
+		//qDebug() << "OSC jaoks aega jäänud: " << phaseSlow;
+		m_oscAddress->sendData("/kunij2rgmisek2suni",  QList<QVariant>() << phaseSlow  );
+		m_oscAddress->sendData("/kiire",  QList<QVariant>() << phaseFast  );
+
+	}
+
+
 }
 
 void WsServer::sectionTimeout()
@@ -145,9 +158,9 @@ void WsServer::sectionTimeout()
 	toggleTimers(false);
 
 	if (currentSection==6) {
-		sendToClients(ALL, "section|LÕPP");
+		sendToClients(ALL, "section|VAIKUS");
 		if (m_oscAddress) {
-			m_oscAddress->sendData("/error/end",  QList<QVariant>() << "END!");
+			m_oscAddress->sendData("/vaikus",  QList<QVariant>() << "Suur vaikus!");
 		}
 
 	}
@@ -172,9 +185,23 @@ void WsServer::setOscAddress(QString host, quint16 port)
 void WsServer::sendCommandAsOSC(QString category, QString command)
 {
 	if (m_oscAddress) {
-		m_oscAddress->sendData("/error/command",  QList<QVariant>() << category << command);
+		m_oscAddress->sendData("/k2sk",  QList<QVariant>() << command.length() ); // TODO
 	}
 }
+
+/*
+
+
+ 172.20.10.2
+/klient 5 1 0.677
+/k2sk 12
+/sektsioon 1
+/kunij2rgmisek2suni 23
+/kiire 23 -  0..100
+/kliente -  liitumised ja lahkusmised
+
+ * */
+
 
 void WsServer::toggleTimers(bool checked)
 {
@@ -187,6 +214,7 @@ void WsServer::toggleTimers(bool checked)
 		slowTimer.stop();
 		fastTimer.stop();
 		counterTimer.stop();
+		sectionTimer.stop(); // not certain if this OK...
 	}
 }
 
@@ -276,7 +304,7 @@ void WsServer::setSection(int section)
 	qDebug()<< "Category: " << currentCategories;
 
 	if (m_oscAddress) {
-		m_oscAddress->sendData("/error/section",  QList<QVariant>() << currentSection + 1);
+		m_oscAddress->sendData("/sektsioon",  QList<QVariant>() << currentSection + 1);
 	}
 	sectionTimer.setSingleShot(true);
 	sectionTimer.start( sectionDuration * 1000 );
@@ -320,16 +348,16 @@ QString WsServer::getCommand(QString category)
 	return command;
 }
 
-void WsServer::handleReport(QWebSocket *client, bool result)
+void WsServer::handleReport(QWebSocket *client, bool result, int efficiency)
 {
 	if (!client) {
 		qDebug() << Q_FUNC_INFO << "Client is null!";
 		return;
 	}
-	qDebug() << client->peerAddress().toString() << " raport: " << result;
+	qDebug() << client->peerAddress().toString() << " raport: " << result << " tõhusus: " << efficiency;
 
 	if (m_oscAddress) {
-		m_oscAddress->sendData("/error/report",  QList<QVariant>() << m_clients.indexOf(client) << static_cast<int>(result));
+		m_oscAddress->sendData("/klient",  QList<QVariant>() << m_clients.indexOf(client) << static_cast<int>(result) << efficiency);
 	}
 
 	if (result) {
