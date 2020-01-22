@@ -394,7 +394,7 @@ void WsServer::makeCommandList()
 {
 	allCommands.clear();
 	categories.clear();
-	QFile file("../PNP2020-server/Commands.csv");
+	QFile file(":/Commands.csv");
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 		return;
 
