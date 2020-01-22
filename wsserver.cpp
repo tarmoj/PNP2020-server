@@ -15,7 +15,8 @@ WsServer::WsServer(quint16 port, QObject *parent) :
                                             QWebSocketServer::NonSecureMode, this)),
 	m_clients(), slowClients(), fastClients(),
 	slowInterval(60 *1000), fastInterval(slowInterval/3),
-	m_oscAddress(nullptr), currentSection(0)
+	m_oscAddress(nullptr), currentSection(0),
+	sectionInMinutes(2)
 //	startInterval(slowInterval), endInterval(slowInterval*0.75),
 //	fastSlowRatio(3);
 
@@ -29,6 +30,7 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 		connect(&fastTimer, &QTimer::timeout, this, &WsServer::fastTimeout );
 		connect(&counterTimer, &QTimer::timeout, this, &WsServer::counterTimeout );
 		connect(&sectionTimer, &QTimer::timeout, this, &WsServer::sectionTimeout );
+		connect(&emulatorTimer, &QTimer::timeout, this, &WsServer::emulatorTimeout );
 		makeCommandList();
 		//setSection(0);
 
@@ -171,6 +173,19 @@ void WsServer::sectionTimeout()
 
 }
 
+void WsServer::emulatorTimeout()
+{
+	// generate random data for handleReport - to test over OSC
+	if (m_oscAddress) {
+		int client = qrand()%30, result = qrand()%2, efficiency = qrand()%101;
+		qDebug() << "Emulate client: " << client << " " << result << " " << efficiency;
+		m_oscAddress->sendData("/klient",   QList<QVariant>() << client << result << efficiency );
+	}
+	int nextTick = 1+ qrand()%10;  // vahemikus 1 sek..10 sek
+	qDebug() << "Next client emulation after " << nextTick << " seconds.";
+	emulatorTimer.setInterval(nextTick * 1000);
+}
+
 
 void WsServer::setOscAddress(QString host, quint16 port)
 {
@@ -244,8 +259,6 @@ void WsServer::setSection(int section)
 		return;
 	}
 
-	const int minutes = 1;
-
 	qDebug() << "Section (index)" << section;
 	currentSection = section;
 	currentCategories.clear();
@@ -255,43 +268,43 @@ void WsServer::setSection(int section)
 
 
 	if (section==0) {
-		slowInterval = 60 * 1000; // in milliseconds
-		fastSlowRatio = 3;
-		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
-	} else if (section==1) {
-		slowInterval = 50 * 1000; // in milliseconds
-		fastSlowRatio = 3;
-		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
-	} else if (section==2) {
-		slowInterval = 45 * 1000; // in milliseconds
-		fastSlowRatio = 2;
-		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
-	} else if (section==3) {
 		slowInterval = 40 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
-	} else if (section==4) {
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==1) {
+		slowInterval = 35 * 1000; // in milliseconds
+		fastSlowRatio = 2;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==2) {
 		slowInterval = 30 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = minutes*60;
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==3) {
+		slowInterval = 25 * 1000; // in milliseconds
+		fastSlowRatio = 2;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==4) {
+		slowInterval = 20 * 1000; // in milliseconds
+		fastSlowRatio = 2;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60;
 
 		currentCategories.clear();
 		currentCategories << "*"; // NB ! ALL categories here!
 	} else if (section==5) {
-		slowInterval = 60 * 1000; // in milliseconds
+		slowInterval = 40 * 1000; // in milliseconds
 		fastSlowRatio = 3;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
 	} else if (section==6) {
 		slowInterval = 20 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = minutes*60; // in sections ? singleshot timer to stop timers?
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
 
 		currentCategories.clear();
 		currentCategories << "*";//categories[2]; // TODO: better if just pass index, no need to copy

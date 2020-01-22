@@ -24,11 +24,13 @@ private slots:
 
 	void on_setOscButton_clicked();
 
-	void on_timersCheckBox_toggled(bool checked);
-
 	void on_startSectioButton_clicked();
 
 	void on_stopSectionButton_clicked();
+
+	void on_emulateCheckBox_toggled(bool checked);
+
+	void on_setSectionTimeButton_clicked();
 
 private:
 	Ui::MainWindow *ui;

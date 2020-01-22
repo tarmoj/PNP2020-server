@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	wsServer->setOscAddress(ui->oscServerLineEdit->text(), static_cast<quint16>(ui->portSpinBox->value()));
 
+	on_setSectionTimeButton_clicked(); // set section time from UI
+
 
 	}
 
@@ -38,10 +40,6 @@ void MainWindow::on_setOscButton_clicked()
 	wsServer->setOscAddress(ui->oscServerLineEdit->text(), static_cast<quint16>(ui->portSpinBox->value())   );
 }
 
-void MainWindow::on_timersCheckBox_toggled(bool checked)
-{
-	wsServer->toggleTimers(checked);
-}
 
 void MainWindow::on_startSectioButton_clicked()
 {
@@ -51,4 +49,21 @@ void MainWindow::on_startSectioButton_clicked()
 void MainWindow::on_stopSectionButton_clicked()
 {
 	wsServer->toggleTimers(false);
+}
+
+
+void MainWindow::on_emulateCheckBox_toggled(bool checked)
+{
+	if (checked) {
+		wsServer->emulatorTimer.start(1000);
+	} else {
+		wsServer->emulatorTimer.stop();
+	}
+}
+
+void MainWindow::on_setSectionTimeButton_clicked()
+{
+	int minutes = ui->sectionInMinutesSpinBox->value();
+	wsServer->setSectionInMinutes(minutes);
+	qDebug() << "Set section to "  << minutes << "minutes";
 }

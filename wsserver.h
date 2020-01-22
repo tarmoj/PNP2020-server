@@ -30,6 +30,8 @@ public:
 	explicit WsServer(quint16 port, QObject *parent = nullptr);
     ~WsServer();
 
+	QTimer emulatorTimer;
+
 	void sendCommands(int clientsType);
 	QString getCommand(QString category);
 	void handleReport(QWebSocket *client, bool result, int efficiency);
@@ -39,6 +41,7 @@ public:
 	void toggleTimers(bool checked);
 	void sendToClients(int clientsType, QString message);
 	void setSection(int section);
+	void setSectionInMinutes(int minutes) { sectionInMinutes = minutes;}
 
 Q_SIGNALS:
     void closed();
@@ -58,6 +61,7 @@ private Q_SLOTS:
 	void fastTimeout();
 	void counterTimeout();
 	void sectionTimeout();
+	void emulatorTimeout();
 
 
 private:
@@ -73,6 +77,7 @@ private:
 	int startInterval, endInterval;
 	int sectionDuration;
 	double fastSlowRatio;
+	int sectionInMinutes;
 
 /*
 	void defineSections();
