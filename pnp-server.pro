@@ -30,5 +30,14 @@ HEADERS  += mainwindow.h \
   
 FORMS    += mainwindow.ui
 
+<<<<<<< Updated upstream
 RESOURCES += \
     resource.qrc
+=======
+macx {
+    installer.path = $$PWD
+    installer.commands = $$[QT_INSTALL_PREFIX]/bin/macdeployqt $$OUT_PWD/$$DESTDIR/$${TARGET}.app -qmldir=$$PWD -dmg # deployment
+    INSTALLS += installer
+
+}
+>>>>>>> Stashed changes
