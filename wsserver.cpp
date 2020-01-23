@@ -135,6 +135,9 @@ void WsServer::slowTimeout()
 	qDebug() << "Slow trigger";
 	if (slowClients.count()>0) sendCommands(SLOW);
 	slowInterval *= 0.9; // get faster!
+	if (m_oscAddress) {
+		m_oscAddress->sendData("/kunij2rgmisek2suni",  QList<QVariant>() << 100 );
+	}
 }
 
 void WsServer::fastTimeout()
@@ -142,6 +145,9 @@ void WsServer::fastTimeout()
 	if (fastClients.count()>0)  sendCommands(FAST);
 	qDebug() << "Fast trigger";
 	fastInterval *= 0.9;
+	if (m_oscAddress) {
+		m_oscAddress->sendData("/kiire",  QList<QVariant>() << 100  );
+	}
 
 }
 
