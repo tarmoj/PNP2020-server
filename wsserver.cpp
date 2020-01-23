@@ -82,9 +82,18 @@ void WsServer::processTextMessage(QString message)
         return;
     }
 	qDebug()<<message;
-	QString peerAdress = pClient->peerAddress().toString();
+	//QString peerAdress = pClient->peerAddress().toString();
 
 	//emit newMessage(message);
+
+	if (message.startsWith("name")) { // comes in "report result" where result 0|1
+		QStringList messageParts = message.split(" ");
+		if (messageParts.size()>=2) {
+			QString name = messageParts[1];
+			namedClients.insert(pClient, name);
+			qDebug() << "Name players: " << namedClients.count() << " "  << namedClients.values();
+		}
+	}
 
 	if (message.startsWith("report")) { // comes in "report result" where result 0|1
 		QStringList messageParts = message.split(" ");
@@ -110,6 +119,10 @@ void WsServer::socketDisconnected()
 		}
 		if (fastClients.contains(pClient)) {
 			fastClients.removeAll(pClient);
+		}
+
+		if (namedClients.contains(pClient)) {
+			namedClients.remove(pClient);
 		}
 
         emit newConnection(m_clients.count());
@@ -198,6 +211,14 @@ void WsServer::sendNamedCommand()
 	// socket->sendTextMessage(client, ..... )
 	qDebug() << "Named command to: " << name << " - " << command << " at: " << time;
 	emit newMessage(QString("Named command to: %1 - %2  - at %3").arg(name, command, time));
+	if (namedClients.values().contains(name)) {
+		QWebSocket * socket = namedClients.key(name);
+		if (socket) {
+			socket->sendTextMessage("command|*|"+command);
+		}
+	} else {
+		qDebug() << "Seems that " << name << " is not connected!";
+	}
 }
 
 

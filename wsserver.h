@@ -81,6 +81,7 @@ private:
 	int sectionDuration;
 	double fastSlowRatio;
 	int sectionInMinutes;
+	QHash <QWebSocket *, QString> namedClients; // socket, name
 
 
 
