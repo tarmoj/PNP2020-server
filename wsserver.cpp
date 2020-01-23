@@ -179,7 +179,7 @@ void WsServer::sectionTimeout()
 {
 	toggleTimers(false);
 
-	if (currentSection==6) {
+	if (currentSection==7) {
 		sendToClients(ALL, "section|VAIKUS");
 		if (m_oscAddress) {
 			m_oscAddress->sendData("/vaikus",  QList<QVariant>() << "Suur vaikus!");
@@ -187,7 +187,7 @@ void WsServer::sectionTimeout()
 
 	}
 
-	if (currentSection<6) {
+	if (currentSection<7) {
 		setSection(currentSection+1);
 	}
 
@@ -270,7 +270,7 @@ void WsServer::toggleTimers(bool checked)
 		slowTimer.stop();
 		fastTimer.stop();
 		counterTimer.stop();
-		sectionTimer.stop(); // not certain if this OK...
+		sectionTimer.stop();
 	}
 }
 
@@ -295,7 +295,7 @@ void WsServer::sendToClients(int clientsType, QString message)
 
 void WsServer::setSection(int section)
 {
-	if (section <0 || section>6) {
+	if (section <0 || section>7) {
 		qDebug() << "Section number out of range!";
 		return;
 	}
@@ -305,6 +305,8 @@ void WsServer::setSection(int section)
 	currentCategories.clear();
 	if (categories.count()>section) {
 		currentCategories << categories[section];
+	} else {
+		currentCategories << "*";
 	}
 
 
@@ -314,38 +316,43 @@ void WsServer::setSection(int section)
 		fastInterval = int(slowInterval/fastSlowRatio);
 		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
 	} else if (section==1) {
-		slowInterval = 35 * 1000; // in milliseconds
-		fastSlowRatio = 2;
-		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
-	} else if (section==2) {
-		slowInterval = 30 * 1000; // in milliseconds
-		fastSlowRatio = 2;
-		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
-	} else if (section==3) {
 		slowInterval = 25 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
 		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==2) {
+		slowInterval = 35 * 1000; // in milliseconds
+		fastSlowRatio = 2;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==3) {
+		slowInterval = 30 * 1000; // in milliseconds
+		fastSlowRatio = 2;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
 	} else if (section==4) {
+		slowInterval = 25 * 1000; // in milliseconds
+		fastSlowRatio = 2;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+	} else if (section==5) {
+		slowInterval = 20 * 1000; // in milliseconds
+		fastSlowRatio = 2;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60*3/2; // NB! section (index) 5 is longer and fast
+
+		currentCategories.clear();
+		currentCategories << "*"; // NB ! ALL categories here!
+	} else if (section==6) {
+		slowInterval = 40 * 1000; // in milliseconds
+		fastSlowRatio = 3;
+		fastInterval = int(slowInterval/fastSlowRatio);
+		sectionDuration = sectionInMinutes*60/2; // this section is slow and shorter
+	} else if (section==7) {
 		slowInterval = 20 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
 		sectionDuration = sectionInMinutes*60;
-
-		currentCategories.clear();
-		currentCategories << "*"; // NB ! ALL categories here!
-	} else if (section==5) {
-		slowInterval = 40 * 1000; // in milliseconds
-		fastSlowRatio = 3;
-		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
-	} else if (section==6) {
-		slowInterval = 20 * 1000; // in milliseconds
-		fastSlowRatio = 2;
-		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
 
 		currentCategories.clear();
 		currentCategories << "*";//categories[2]; // TODO: better if just pass index, no need to copy

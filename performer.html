@@ -27,8 +27,10 @@
 			if (mess_array.length>=2 && mess_array[0]==="section") {
 				disableButtons(); // to avoid that the current command 
 				document.getElementById("section").innerHTML = mess_array[1];
-				
-				// kas sead commandsCount jm 0 - kui section==1
+				if (mess_array[1]==="VAIKUS") {
+					disableButtons();
+					document.getElementById("command").innerHTML = "";
+				 }
 			}
             
             
