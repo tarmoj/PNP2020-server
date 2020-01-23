@@ -36,6 +36,7 @@ public:
 	QString getCommand(QString category);
 	void handleReport(QWebSocket *client, bool result, int efficiency);
 	void makeCommandList();
+	void makeNamedCommandList();
 	void setOscAddress(QString host, quint16 port);
 	void sendCommandAsOSC(QString category, QString command);
 	void toggleTimers(bool checked);
@@ -62,7 +63,7 @@ private Q_SLOTS:
 	void counterTimeout();
 	void sectionTimeout();
 	void emulatorTimeout();
-
+	void sendNamedCommand();
 
 private:
     QWebSocketServer *m_pWebSocketServer;
@@ -70,6 +71,8 @@ private:
 	QList<QWebSocket *> slowClients, fastClients;
 	QStringList categories, currentCategories;
 	QMultiHash <QString, QString> allCommands; // key: category, value: command
+	QList <QPair <QString, QString>> namedCommands;
+	QStringList names; // names of performers following their special instructions
 	QTimer slowTimer, fastTimer, counterTimer, sectionTimer;
 	int slowInterval, fastInterval;
 	QOscClient * m_oscAddress;
@@ -79,27 +82,7 @@ private:
 	double fastSlowRatio;
 	int sectionInMinutes;
 
-/*
-	void defineSections();
 
-	class Section {
-	public:
-		Section();
-		~Section();
-
-		int startInterval, endInterval;
-		QTimer slowTimer, fastTimer;
-		int slowInterval, fastInterval;
-		//double fastSlowRatio; // how many times is the fast
-		int duration; // in seconds
-		int startTime;
-	public slots:
-		void slowTimeout();
-		void fastTimeout();
-	};
-
-	Section section[8];
-*/
 
 };
 

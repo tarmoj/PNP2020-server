@@ -32,8 +32,9 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 		connect(&sectionTimer, &QTimer::timeout, this, &WsServer::sectionTimeout );
 		connect(&emulatorTimer, &QTimer::timeout, this, &WsServer::emulatorTimeout );
 		makeCommandList();
-		//setSection(0);
-
+		makeNamedCommandList();
+	} else {
+		emit newMessage("Could not start websocket server");
 	}
 
 
@@ -186,6 +187,19 @@ void WsServer::emulatorTimeout()
 	emulatorTimer.setInterval(nextTick * 1000);
 }
 
+void WsServer::sendNamedCommand()
+{
+	int index = qrand() % namedCommands.count();
+	QString name = namedCommands.at(index).first;
+	QString command = namedCommands.at(index).second;
+	int seconds = (sectionDuration - sectionTimer.remainingTime()/1000);
+	QString time = QString("%1:%2").arg(seconds/60).arg(seconds%60);
+	// find socket
+	// socket->sendTextMessage(client, ..... )
+	qDebug() << "Named command to: " << name << " - " << command << " at: " << time;
+	emit newMessage(QString("Named command to: %1 - %2  - at %3").arg(name, command, time));
+}
+
 
 void WsServer::setOscAddress(QString host, quint16 port)
 {
@@ -310,6 +324,14 @@ void WsServer::setSection(int section)
 		currentCategories << "*";//categories[2]; // TODO: better if just pass index, no need to copy
 	}
 
+
+	// send named commands - <section+1> times per section
+	for (int i=0; i<section+1; i++) {
+		int interval = (qrand() % sectionDuration)*1000;
+		QTimer::singleShot(interval, this, SLOT(sendNamedCommand()));
+	}
+
+
 	sendToClients(ALL, "section|"+QString::number(section+1));
 
 	emit newSection(section+1);
@@ -416,6 +438,33 @@ void WsServer::makeCommandList()
 		categories  << temp.takeAt(index);
 	}
 	qDebug() << "Categories: " << categories;
+}
+
+void WsServer::makeNamedCommandList()
+{
+	QStringList andrus = QStringList() << "S" << "B" ;
+	// in the file NamedCommands every line is set as: name | command
+
+	namedCommands.clear();
+	names.clear();
+	QFile file(":/NamedCommands.csv");
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+
+	while (!file.atEnd()) {
+		QString line = QString(file.readLine());
+		QStringList parts= line.split("|");
+		if (parts.count()>=2) {
+			namedCommands.append(qMakePair(parts[0], parts[1].simplified().remove('\n') ));
+			if (!names.contains(parts[0])) {
+				names.append(parts[0]);
+			}
+		}
+	}
+
+	//names.removeDuplicates();
+	qDebug() << "Added " << namedCommands.count() << " commands to Named commands list";
+	qDebug() << "Names: "  << names;
 }
 
 
