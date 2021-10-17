@@ -64,16 +64,18 @@ private Q_SLOTS:
 	void sectionTimeout();
 	void emulatorTimeout();
 	void sendNamedCommand();
+	void startTimeout();
 
 private:
     QWebSocketServer *m_pWebSocketServer;
 	QList<QWebSocket *> m_clients;
 	QList<QWebSocket *> slowClients, fastClients;
-	QStringList categories, currentCategories;
+    QStringList categories;
+    QString currentCategory;
 	QMultiHash <QString, QString> allCommands; // key: category, value: command
 	QList <QPair <QString, QString>> namedCommands;
 	QStringList names; // names of performers following their special instructions
-	QTimer slowTimer, fastTimer, counterTimer, sectionTimer;
+	QTimer slowTimer, fastTimer, counterTimer, sectionTimer, startTimer;
 	int slowInterval, fastInterval;
 	QOscClient * m_oscAddress;
 	int currentSection;

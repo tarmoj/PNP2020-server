@@ -3,6 +3,9 @@
 #include "QtWebSockets/qwebsocket.h"
 #include <QtCore/QDebug>
 #include <QFile>
+#include <QDateTime>
+#include <QDate>
+#include <QTime>
 
 
 QT_USE_NAMESPACE
@@ -31,6 +34,15 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 		connect(&counterTimer, &QTimer::timeout, this, &WsServer::counterTimeout );
 		connect(&sectionTimer, &QTimer::timeout, this, &WsServer::sectionTimeout );
 		connect(&emulatorTimer, &QTimer::timeout, this, &WsServer::emulatorTimeout );
+
+		QDateTime now = QDateTime::currentDateTime();
+		QDateTime timeoftheaction = QDateTime::fromString("2020-01-25  19:00:00","yyyy-MM-dd  HH:mm:ss");;
+
+		startTimer.setSingleShot(true);
+		connect(&startTimer, &QTimer::timeout, this, &WsServer::startTimeout );
+		qDebug() << "Alguseni: " << now.secsTo(timeoftheaction) << " sekundit";
+		startTimer.start(now.secsTo(timeoftheaction)*1000);
+
 		makeCommandList();
 		makeNamedCommandList();
 	} else {
@@ -227,6 +239,13 @@ void WsServer::sendNamedCommand()
 	}
 }
 
+void WsServer::startTimeout()
+{
+	qDebug() << "****** START! ******* ";
+	setSection(0); // natuke kehv, sest ei esimene käsk automaatselt punane..
+	toggleTimers(true);
+}
+
 
 void WsServer::setOscAddress(QString host, quint16 port)
 {
@@ -302,11 +321,10 @@ void WsServer::setSection(int section)
 
 	qDebug() << "Section (index)" << section;
 	currentSection = section;
-	currentCategories.clear();
 	if (categories.count()>section) {
-		currentCategories << categories[section];
+        currentCategory = categories[section];
 	} else {
-		currentCategories << "*";
+        currentCategory = "*";
 	}
 
 
@@ -340,9 +358,7 @@ void WsServer::setSection(int section)
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
 		sectionDuration = sectionInMinutes*60*3/2; // NB! section (index) 5 is longer and fast
-
-		currentCategories.clear();
-		currentCategories << "*"; // NB ! ALL categories here!
+        currentCategory = "*"; // NB ! ALL categories here!
 	} else if (section==6) {
 		slowInterval = 40 * 1000; // in milliseconds
 		fastSlowRatio = 3;
@@ -353,9 +369,7 @@ void WsServer::setSection(int section)
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
 		sectionDuration = sectionInMinutes*60;
-
-		currentCategories.clear();
-		currentCategories << "*";//categories[2]; // TODO: better if just pass index, no need to copy
+        currentCategory = "*";//categories[2]; // TODO: better if just pass index, no need to copy
 	}
 
 
@@ -370,7 +384,7 @@ void WsServer::setSection(int section)
 
 	emit newSection(section+1);
 	emit newMessage("Section "+QString::number(section+1));
-	qDebug()<< "Category: " << currentCategories;
+    qDebug()<< "Category: " << currentCategory;
 
 	if (m_oscAddress) {
 		m_oscAddress->sendData("/sektsioon",  QList<QVariant>() << currentSection + 1);
@@ -386,7 +400,7 @@ void WsServer::setSection(int section)
 void WsServer::sendCommands(int clientsType)
 {
 
-	QString category = "*";//currentCategories.count()<1 ? "*" : currentCategories[0];
+    QString category = currentCategory.isEmpty() ? "*" : currentCategory;
 
 
 	// send OSC <- needs more
