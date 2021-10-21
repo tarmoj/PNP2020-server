@@ -16,8 +16,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(wsServer, &WsServer::newSection, this->ui->sectionSpinBox, &QSpinBox::setValue);
 	connect(wsServer, &WsServer::newMessage, this->ui->messagesTextEdit, &QTextEdit::append);
 
-
-	wsServer->setOscAddress(ui->oscServerLineEdit->text(), static_cast<quint16>(ui->portSpinBox->value()));
+    // no osc commands in 2021 version
+    //wsServer->setOscAddress(ui->oscServerLineEdit->text(), static_cast<quint16>(ui->portSpinBox->value()));
 
 	on_setSectionTimeButton_clicked(); // set section time from UI
 

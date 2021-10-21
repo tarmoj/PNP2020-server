@@ -36,7 +36,7 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 		connect(&emulatorTimer, &QTimer::timeout, this, &WsServer::emulatorTimeout );
 
 		QDateTime now = QDateTime::currentDateTime();
-		QDateTime timeoftheaction = QDateTime::fromString("2020-01-25  19:00:00","yyyy-MM-dd  HH:mm:ss");;
+        QDateTime timeoftheaction = QDateTime::fromString("2021-10-25  19:00:00","yyyy-MM-dd  HH:mm:ss");;
 
 		startTimer.setSingleShot(true);
 		connect(&startTimer, &QTimer::timeout, this, &WsServer::startTimeout );
@@ -44,7 +44,7 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 		startTimer.start(now.secsTo(timeoftheaction)*1000);
 
 		makeCommandList();
-		makeNamedCommandList();
+        //makeNamedCommandList(); // no named commands in 2021 version
 	} else {
 		emit newMessage("Could not start websocket server");
 	}
@@ -374,16 +374,16 @@ void WsServer::setSection(int section)
 
 
 	// send named commands - <section+1> times per section
-	for (int i=0; i<section+1; i++) {
-		int interval = (qrand() % sectionDuration)*1000;
-		QTimer::singleShot(interval, this, SLOT(sendNamedCommand()));
-	}
+//	for (int i=0; i<section+1; i++) {
+//        //int interval = (qrand() % sectionDuration)*1000;
+//        //QTimer::singleShot(interval, this, SLOT(sendNamedCommand()));
+//	}
 
 
-	sendToClients(ALL, "section|"+QString::number(section+1));
+    sendToClients(ALL, "section|"+QString::number(section+1) + " " + currentCategory);
 
 	emit newSection(section+1);
-	emit newMessage("Section "+QString::number(section+1));
+    emit newMessage("Section "+QString::number(section+1) + " " + currentCategory);
     qDebug()<< "Category: " << currentCategory;
 
 	if (m_oscAddress) {
