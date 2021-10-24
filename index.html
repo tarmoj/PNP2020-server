@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+        <meta name="viewport" content="width=device-width" />
+
+    <title>Šamaani surm. Lõppmäng</title>
+    <meta content="Tarmo Johannes" id="author">
+	
+<!--	<link type="text/css" rel="stylesheet" href="audience.css">-->
+	<style >
+	</style>
+    <script src="ws-functions.js"></script> <!-- websocket functions -->
+    <script src="server_address.js"></script>  <!-- default address of the ws server -->
+    <script>
+    
+	var countingTimer;
+	var accomplished = true;
+	var commandsCount = 0, accomplishedCount=0, efficiency=0;
+	const launguage = "eesti";
+	
+    function onMessage(evt) 
+    {
+            writeToScreen("Message from server: " + evt.data + '\n');
+            var mess_array = evt.data.split("|");
+            
+            
+			if (mess_array.length>=2 && mess_array[0]==="section") {
+				disableButtons(); // to avoid that the current command 
+				document.getElementById("section").innerHTML = mess_array[1];
+				 if (mess_array[1]==="VAIKUS") {
+					disableButtons();
+					document.getElementById("command").innerHTML = "";
+				 }
+			}
+            
+            
+            if (mess_array.length>=3 && mess_array[0]==="command") {
+				if (!document.getElementById("yesButton").disabled) { // if new command comes and has not answered yet, set it disabled 
+					accomplished = 0;
+					setEfficiency();
+					doSend("report 0 "  + efficiency);
+					window.document.body.style.backgroundColor = getRandomRolor("red" );
+
+				}
+				commandsCount += 1;
+				setEfficiency();
+				var category = mess_array[1];
+				var command = mess_array[2];
+				var interval =   parseInt(mess_array[3]);
+				document.getElementById("command").innerHTML = command;
+				document.getElementById("yesButton").disabled = false;
+				document.getElementById("noButton").disabled = false;
+				window.document.body.style.backgroundColor = getRandomRolor((accomplished) ? "blue" : "red" );
+
+			}
+			if (mess_array.length>=2 && mess_array[0]==="countdown") {
+				document.getElementById("countdown").innerHTML = mess_array[1];
+			}
+			
+            
+            //console.log(mess_array[0]);
+           
+    }
+    
+    function getRandomRolor(redOrBlue) {
+        var letters = "0123456789".split("");
+        var color="#";
+        if (redOrBlue==="red") {
+			color += "ff";
+			for (var i = 0; i < 4; i++) {
+				color += letters[Math.round(Math.random() * 9)];
+			}
+        } else if (redOrBlue==="blue") {
+			for (var i = 0; i < 4; i++) {
+				color += letters[Math.round(Math.random() * 9)];
+			}
+			color += "ff";
+        }
+        return color;
+	}
+    
+    
+    function disableButtons() 
+    {
+		document.getElementById("yesButton").disabled = true;
+		document.getElementById("noButton").disabled = true;
+    }
+    
+    function setEfficiency() {
+		efficiency = Math.round(accomplishedCount/commandsCount * 100);
+		document.getElementById("efficiency").innerHTML = efficiency;
+		document.getElementById("commandsCount").innerHTML = commandsCount;
+		document.getElementById("accomplishedCount").innerHTML = accomplishedCount;
+    }
+    
+    
+    function report(result) { // result is 1 or 0
+		if (result) {
+			accomplishedCount += 1;
+		}
+		setEfficiency();
+		doSend("report " + result + " " + efficiency); 
+		disableButtons(); 
+		accomplished = result;
+		window.document.body.style.backgroundColor = getRandomRolor((result) ? "blue" : "red" );
+    
+    }
+    
+
+	
+	window.onload = function() {
+		document.getElementById("url").value = serverUrl; //serverUrl;
+		doConnect(serverUrl);	
+		disableButtons();
+	}
+	
+    </script>
+
+  </head>
+  <body style='background-color:darkblue; color: white'>
+  	<span style='margin-left:400px'><small><i><a href="index-en.html">English</a></i></small></span>
+	<h1>Šamaani surm. Lõppmäng</h1>
+	
+	<div>
+	Järgmise käsuni: <label id="countdown">-1</label>
+	</div>
+	<br>
+	Lõik: <label id="section">-1</label>
+	<br>
+	Käsk: <big><label id="command"></label></b>
+	<br>
+	Vastu võetud: <label id="commandsCount">0</label> 
+	täidetud: <label id="accomplishedCount">0</label> 
+	tõhusus: <label id="efficiency">0</label>%<br>
+	<br>
+	<br>
+	<button id="yesButton" onclick='report(1)'>TEGIN</button>
+	<button id="noButton" onclick='report(0)'>EI TEINUD</button>
+    <br>
+    <br>
+    Server: <input value="ws://liivaluite.hopto.org:9009/ws" id="url" type="text" >
+    <button type="button" id="connectButton" onclick="doConnect(url.value);">Connect</button>
+    <br>
+    <br>
+     <p><textarea id="outputtext" rows="5" cols="30" readonly hidden></textarea> </p>
+     
+	
+  </body>
+</html>
