@@ -9,6 +9,29 @@
 	
 <!--	<link type="text/css" rel="stylesheet" href="audience.css">-->
 	<style >
+	a:link {
+  color: lightgreen;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: lightgrey;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:hover {
+  color: red;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+a:active {
+  color: yellow;
+  background-color: transparent;
+  text-decoration: underline;
+}
 	</style>
     <script src="ws-functions.js"></script> <!-- websocket functions -->
     <script src="server_address.js"></script>  <!-- default address of the ws server -->
@@ -17,18 +40,23 @@
 	var countingTimer;
 	var accomplished = true;
 	var commandsCount = 0, accomplishedCount=0, efficiency=0;
-	const launguage = "english";
+	const language = "english";
+	const categoryTranslations= {"Mööbel":"Furniture", "Liikumine":"Movement", "Jäsemed":"Limbs", "Muu":"Miscellaneous", "Inimesed":"People", "*":"Everything", "VAIKUS":"SILENCE"};
 	
     function onMessage(evt) 
     {
             writeToScreen("Message from server: " + evt.data + '\n');
             var mess_array = evt.data.split("|");
+            console.log("mess_array:", mess_array );
             
             
-			if (mess_array.length>=2 && mess_array[0]==="section") {
+			if (mess_array.length>=3 && mess_array[0]==="section") {
 				disableButtons(); // to avoid that the current command 
-				document.getElementById("section").innerHTML = mess_array[1];
+				const category = mess_array[2];
+				const output = categoryTranslations[category] ? categoryTranslations[category] : category; // fallback if translation will not work
+				document.getElementById("section").innerHTML =  categoryTranslations[category];
 				 if (mess_array[1]==="VAIKUS") {
+					console.log("VAIKUS");
 					disableButtons();
 					document.getElementById("command").innerHTML = "";
 				 }
@@ -122,16 +150,16 @@
 
   </head>
   <body style='background-color:darkblue; color: white'>
-	<span style='margin-left:400px'><small><i><a href="afekt-index.html">Eesti</a></i></small></span>
+	<span style='margin-left:400px; color:white; '><small><i><a href="index.html">Eesti</a></i></small></span>
 	<h1>La Mort du Chaman. Finale</h1>
 	
 	
 	
 	<div>
-	Time until next command (in seconds): <label id="countdown">-1</label>
+	Time until next command (in seconds): <label id="countdown">Wait for start</label>
 	</div>
 	<br>
-	Section: <label id="section">-1</label>
+	Section: <label id="section">Wait for start</label>
 	<br>
 	Command: <big><label id="command"></label></b>
 	<br>

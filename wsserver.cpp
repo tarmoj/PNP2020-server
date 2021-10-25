@@ -314,7 +314,7 @@ void WsServer::sendToClients(int clientsType, QString message)
 
 void WsServer::setSection(int section)
 {
-	if (section <0 || section>7) {
+    if (section <0 || section>6) { // was 7 for Pärnu
 		qDebug() << "Section number out of range!";
 		return;
 	}
@@ -332,27 +332,27 @@ void WsServer::setSection(int section)
 		slowInterval = 40 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+        sectionDuration = sectionInMinutes*60;  // in seconds
 	} else if (section==1) {
 		slowInterval = 25 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+        sectionDuration = sectionInMinutes*60;
 	} else if (section==2) {
 		slowInterval = 35 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+        sectionDuration = sectionInMinutes*60;
 	} else if (section==3) {
 		slowInterval = 30 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+        sectionDuration = sectionInMinutes*60;
 	} else if (section==4) {
 		slowInterval = 25 * 1000; // in milliseconds
 		fastSlowRatio = 2;
 		fastInterval = int(slowInterval/fastSlowRatio);
-		sectionDuration = sectionInMinutes*60; // in sections ? singleshot timer to stop timers?
+        sectionDuration = sectionInMinutes*60;
 	} else if (section==5) {
 		slowInterval = 20 * 1000; // in milliseconds
 		fastSlowRatio = 2;
@@ -380,7 +380,7 @@ void WsServer::setSection(int section)
 //	}
 
 
-    sendToClients(ALL, "section|"+QString::number(section+1) + " " + currentCategory);
+    sendToClients(ALL, "section|"+QString::number(section+1) + "|" + currentCategory);
 
 	emit newSection(section+1);
     emit newMessage("Section "+QString::number(section+1) + " " + currentCategory);
@@ -469,10 +469,14 @@ void WsServer::makeCommandList()
 		return;
 
 	while (!file.atEnd()) {
-		QString line = QString(file.readLine());
-		QStringList parts= line.split("|");
+        QString line = QString(file.readLine()); // should be in form Category|Command(est)|Translation(ENG)
+        QStringList parts= line.split("|");
 		if (parts.count()>=2) {
-			allCommands.insert(parts[0], parts[1].remove('\n'));
+            QString command = parts[1].remove('\n');
+            if (parts.count()>=3) { // there is also translation -  like done for Afekt 2021
+                command += "|" + parts[2].remove('\n'); // it will be split by the client
+            }
+            allCommands.insert(parts[0], command);
 		}
 	}
 

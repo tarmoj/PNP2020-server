@@ -6,9 +6,32 @@
 
     <title>Šamaani surm. Lõppmäng</title>
     <meta content="Tarmo Johannes" id="author">
-	
-<!--	<link type="text/css" rel="stylesheet" href="audience.css">-->
 	<style >
+<!--	<link type="text/css" rel="stylesheet" href="audience.css">-->
+	a:link {
+  color: green;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: lightgrey;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:hover {
+  color: red;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+a:active {
+  color: yellow;
+  background-color: transparent;
+  text-decoration: underline;
+}
+	
 	</style>
     <script src="ws-functions.js"></script> <!-- websocket functions -->
     <script src="server_address.js"></script>  <!-- default address of the ws server -->
@@ -25,9 +48,10 @@
             var mess_array = evt.data.split("|");
             
             
-			if (mess_array.length>=2 && mess_array[0]==="section") {
+			if (mess_array.length>=3 && mess_array[0]==="section") {
 				disableButtons(); // to avoid that the current command 
-				document.getElementById("section").innerHTML = mess_array[1];
+				const category = mess_array[2];
+				document.getElementById("section").innerHTML = mess_array[1] + " " + category;
 				 if (mess_array[1]==="VAIKUS") {
 					disableButtons();
 					document.getElementById("command").innerHTML = "";
@@ -119,14 +143,14 @@
 
   </head>
   <body style='background-color:darkblue; color: white'>
-  	<span style='margin-left:400px'><small><i><a href="index-en.html">English</a></i></small></span>
+  	<span style='margin-left:380px'><small><i><a href="index-en.html">English</a></i></small></span>
 	<h1>Šamaani surm. Lõppmäng</h1>
 	
 	<div>
-	Järgmise käsuni: <label id="countdown">-1</label>
+	Järgmise käsuni: <label id="countdown">Oodake algust</label>
 	</div>
 	<br>
-	Lõik: <label id="section">-1</label>
+	Lõik: <label id="section">Oodake algust</label>
 	<br>
 	Käsk: <big><label id="command"></label></b>
 	<br>

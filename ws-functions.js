@@ -24,6 +24,7 @@
 	{
 		writeToScreen("connected\n");
 		document.getElementById("connectButton").disabled = true;
+		document.getElementById("connectButton").innerHTML = "Connected";
 		if (typeof(myOnOpen) !== "undefined") { // do something when socket is opened
 			myOnOpen();
 		}
@@ -33,6 +34,7 @@
 	{
 		writeToScreen("state: disconnected\n");
 		document.getElementById("connectButton").disabled = false;
+		document.getElementById("connectButton").innerHTML = "Connect";
 	}
 
 	
@@ -41,7 +43,8 @@
 	{
 		writeToScreen('error (' + document.getElementById("url").value + ') ' + evt.data + '\n');
 		websocket.close();
-		connectButton.disabled = false;
+		document.getElementById("connectButton").disabled = false;
+		document.getElementById("connectButton").innerHTML = "Connect";
 	}
 
 	function doSend(message)

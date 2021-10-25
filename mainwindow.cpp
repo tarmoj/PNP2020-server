@@ -49,6 +49,9 @@ void MainWindow::on_startSectioButton_clicked()
 void MainWindow::on_stopSectionButton_clicked()
 {
 	wsServer->toggleTimers(false);
+    // for Afekt:
+    wsServer->sendToClients(ALL,"command|VAIKUS|Tardu paigale|Freeze where you are");
+    wsServer->sendToClients(ALL, "section|VAIKUS");
 }
 
 
